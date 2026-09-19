@@ -1,5 +1,5 @@
--- View / Bus Script for: Sales_Daily
--- Generated: 2026-09-19 14:44:06.489006
+-- Data Product : Sales_Daily
+-- Generated   : 2026-09-19 19:48:16
 
 SELECT
     f.sale_id,
