@@ -1,0 +1,129 @@
+data_product_name,bus_script
+Sales_Daily,"SELECT
+    f.sale_id,
+    f.sale_date,
+    f.amount,
+    f.quantity,
+    f.discount_pct,
+    c.customer_id,
+    c.customer_name,
+    c.email        AS customer_email,
+    c.region,
+    c.segment,
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.sub_category,
+    p.unit_price,
+    d.date_key,
+    d.calendar_date,
+    d.month_name,
+    d.quarter,
+    d.fiscal_year,
+    s.store_id,
+    s.store_name,
+    s.city,
+    s.country
+FROM dbo.fact_sales f
+INNER JOIN dbo.dim_customer  c ON f.customer_id  = c.customer_id
+INNER JOIN dbo.dim_product   p ON f.product_id   = p.product_id
+INNER JOIN dbo.dim_date      d ON f.date_key      = d.date_key
+INNER JOIN dbo.dim_store     s ON f.store_id      = s.store_id
+WHERE
+    f.sale_date >= DATEADD(DAY, -1, CAST(GETDATE() AS DATE))
+    AND f.is_deleted = 0
+    AND c.is_active  = 1"
+Customer_360,"SELECT
+    c.customer_id,
+    c.customer_name,
+    c.email,
+    c.phone,
+    c.date_of_birth,
+    c.registration_date,
+    c.segment,
+    a.address_id,
+    a.address_line1,
+    a.city,
+    a.state,
+    a.zip_code,
+    a.country,
+    o.total_orders,
+    o.total_spend,
+    o.avg_order_value,
+    o.last_order_date,
+    lv.loyalty_tier,
+    lv.loyalty_points
+FROM dbo.dim_customer c
+LEFT JOIN dbo.dim_address      a  ON c.address_id    = a.address_id
+LEFT JOIN dbo.agg_order_stats  o  ON c.customer_id   = o.customer_id
+LEFT JOIN dbo.dim_loyalty      lv ON c.customer_id   = lv.customer_id
+WHERE c.is_active = 1"
+Inventory_Weekly,"SELECT
+    i.item_id,
+    i.item_name,
+    i.sku,
+    i.upc_code,
+    w.warehouse_id,
+    w.warehouse_name,
+    w.region       AS warehouse_region,
+    s.supplier_id,
+    s.supplier_name,
+    inv.quantity_on_hand,
+    inv.quantity_reserved,
+    inv.quantity_available,
+    inv.reorder_level,
+    inv.reorder_quantity,
+    inv.unit_cost,
+    inv.snapshot_date
+FROM dbo.fact_inventory inv
+INNER JOIN dbo.dim_item      i ON inv.item_id      = i.item_id
+INNER JOIN dbo.dim_warehouse w ON inv.warehouse_id = w.warehouse_id
+INNER JOIN dbo.dim_supplier  s ON inv.supplier_id  = s.supplier_id
+WHERE inv.snapshot_date = DATEADD(WEEK, -1, CAST(GETDATE() AS DATE))"
+Finance_Monthly,"SELECT
+    gl.ledger_id,
+    gl.transaction_date,
+    gl.amount,
+    gl.debit_credit_flag,
+    gl.description,
+    acc.account_id,
+    acc.account_code,
+    acc.account_name,
+    acc.account_type,
+    cc.cost_center_id,
+    cc.cost_center_name,
+    cc.department,
+    e.entity_id,
+    e.entity_name,
+    e.legal_entity
+FROM dbo.fact_gl_transactions gl
+INNER JOIN dbo.dim_account     acc ON gl.account_id     = acc.account_id
+INNER JOIN dbo.dim_cost_center cc  ON gl.cost_center_id = cc.cost_center_id
+INNER JOIN dbo.dim_entity      e   ON gl.entity_id      = e.entity_id
+WHERE
+    MONTH(gl.transaction_date) = MONTH(DATEADD(MONTH, -1, GETDATE()))
+    AND YEAR(gl.transaction_date)  = YEAR(DATEADD(MONTH, -1, GETDATE()))"
+HR_Headcount,"SELECT
+    e.employee_id,
+    e.first_name,
+    e.last_name,
+    e.email,
+    e.hire_date,
+    e.termination_date,
+    e.employment_status,
+    d.department_id,
+    d.department_name,
+    d.division,
+    j.job_id,
+    j.job_title,
+    j.job_level,
+    j.job_family,
+    l.location_id,
+    l.office_name,
+    l.city,
+    l.country
+FROM dbo.dim_employee e
+INNER JOIN dbo.dim_department d ON e.department_id = d.department_id
+INNER JOIN dbo.dim_job        j ON e.job_id        = j.job_id
+INNER JOIN dbo.dim_location   l ON e.location_id   = l.location_id
+WHERE e.employment_status IN ('Active','On Leave')"
